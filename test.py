@@ -6,7 +6,6 @@ import socket
 import sys
 import zmq
 import base64
-import socket
 import threading
 
 class DetectorAPI:
@@ -93,8 +92,8 @@ if __name__ == "__main__":
 				client.close()
 				break
 
-	t = threading.Thread(target = pi_client_thread, args = (client, clientInfo))
-	t.start()
+	t1 = threading.Thread(target = pi_client_thread, args = (client, clientInfo))
+	t1.start()
 		
 	# pts = deque(maxlen=32)
 	pts = None
@@ -103,10 +102,9 @@ if __name__ == "__main__":
 	direction = ""
 	out = cv2.VideoWriter('outpy.avi',cv2.VideoWriter_fourcc('M','J','P','G'), 10, (1280,720))
 
-	model_path = 'ssdlite_mobilenet_v2_coco_2018_05_09\\ssdlite_mobilenet_v2_coco_2018_05_09\\frozen_inference_graph.pb'
+	model_path = './ssdlite_mobilenet_v2_coco_2018_05_09/frozen_inference_graph.pb'
 	odapi = DetectorAPI(path_to_ckpt=model_path)
 	threshold = 0.7
-	cap = cv2.VideoCapture(0)
 
 	time.sleep(1.0)
 
@@ -121,8 +119,8 @@ if __name__ == "__main__":
 
 		boxes, scores, classes, num = odapi.processFrame(frame)
 
-		width = cap.get(3)  # float
-		height = cap.get(4) # float
+		# width = cap.get(3)  # float
+		# height = cap.get(4) # float
 		# print(width) 1280.0
 		# print(height) 720.0
 		# calc = ((width/2)-(width/4),(height/2)-(height/4))  (320.0, 180.0)
@@ -226,6 +224,6 @@ if __name__ == "__main__":
 		pts = None
 
 	sock.close()
-	cap.stop()
+	# cap.stop()
 	out.release()
 	cv2.destroyAllWindows()
