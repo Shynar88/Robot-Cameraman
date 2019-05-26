@@ -55,7 +55,7 @@ if __name__ == "__main__":
 	smile_cascade = cv2.CascadeClassifier(smilePath)
 	sF=1.05
 	a=0
-	t=0
+	t=time.time()
 	total=0
 
 	# pts = deque(maxlen=32)
@@ -124,11 +124,12 @@ if __name__ == "__main__":
 			
 	
 			if a==1:
-				if counter>30:
+				if time.time()-t>2:
 					img_name = "opencv_frame_%s.png"%total
 					cv2.imwrite(img_name, frame)
 					total+=1
 					a=0
+					t=time.time()
 
 			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 			(x1, y1, w1, h1) = pts[2]
@@ -162,7 +163,7 @@ if __name__ == "__main__":
 
 		cv2.imshow("Frame", frame)
 		key = cv2.waitKey(1) & 0xFF
-		counter += 1
+
 
 		if key == ord("q"):
 			break
