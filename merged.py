@@ -56,7 +56,8 @@ if __name__ == "__main__":
 	sF=1.05
 	a=0
 
-	pts = deque(maxlen=32)
+	# pts = deque(maxlen=32)
+	pts = None
 	counter = 0
 	(dX, dY) = (0, 0)
 	direction = ""
@@ -69,8 +70,8 @@ if __name__ == "__main__":
 	time.sleep(2.0)
 
 	while True:
-		r, img = cap.read()
-		frame = cv2.resize(img, (1280, 720))
+		r, frame = cap.read()
+		frame = cv2.resize(frame, (1280, 720))
 
 		boxes, scores, classes, num = odapi.processFrame(frame)
 
@@ -94,67 +95,65 @@ if __name__ == "__main__":
 				box = boxes[i]
 				cv2.rectangle(frame,(box[1],box[0]),(box[3],box[2]),(0,255,0),2)
 				center = ( int((box[1]+box[3])/2) , int((box[0]+box[2])/2) )
-				pts.appendleft((center, (int((box[1]+box[3])/2), box[0]), (box[1],box[0],box[3]-box[1], box[2]-box[0])))
+				pts = (center, (int((box[1]+box[3])/2), box[0]), (box[1],box[0],box[3]-box[1], box[2]-box[0]))
 
-		for i in np.arange(1, len(pts)):
-			if pts[i - 1] is None or pts[i] is None:
-				continue
-			else:
-				#crossing left boundary	
-				if pts[i][0][0] < 320:
-					font = cv2.FONT_HERSHEY_SIMPLEX
-					cv2.putText(frame,'turn Left',(10,500), font, 4,(255,255,255),2,cv2.LINE_AA)
-
-				#crossing right boundary
-				if pts[i][0][0] > 960:
-					font = cv2.FONT_HERSHEY_SIMPLEX
-					cv2.putText(frame,'turn Right',(10,500), font, 4,(0,0,0),2,cv2.LINE_AA)
-
-				#crossing upper boundary
-				if pts[i][1][1] < 50:
-					font = cv2.FONT_HERSHEY_SIMPLEX
-					cv2.putText(frame,'go Back',(10,500), font, 4,(0,255,0),2,cv2.LINE_AA)
-
-				#crossing lower boundary
-				if pts[i][1][1] > 180:
-					font = cv2.FONT_HERSHEY_SIMPLEX
-					cv2.putText(frame,'go Forward',(10,500), font, 4,(0,0,255),2,cv2.LINE_AA)
-
-				
 		
-				if a==1:
-					img_name = "opencv_frame_complete.png"
-					cv2.imwrite(img_name, frame)
+		if pts != None:
+			#crossing left boundary	
+			if pts[0][0] < 320:
+				font = cv2.FONT_HERSHEY_SIMPLEX
+				cv2.putText(frame,'turn Left',(10,500), font, 4,(255,255,255),2,cv2.LINE_AA)
 
-				gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-				(x1, y1, w1, h1) = pts[i][2]
-				human_gray = gray[y1:y1+h1, x1:x1+w1]
-				human_color= frame[y1:y1+h1, x1:x1+w1]
-				faces = face_cascade.detectMultiScale(
-					human_gray,
-					scaleFactor=sF,
-					minNeighbors=8,
-					minSize=(55, 55),
-					flags=cv2.CASCADE_SCALE_IMAGE
-					)
+			#crossing right boundary
+			if pts[0][0] > 960:
+				font = cv2.FONT_HERSHEY_SIMPLEX
+				cv2.putText(frame,'turn Right',(10,500), font, 4,(0,0,0),2,cv2.LINE_AA)
+
+			#crossing upper boundary
+			if pts[1][1] < 50:
+				font = cv2.FONT_HERSHEY_SIMPLEX
+				cv2.putText(frame,'go Back',(10,500), font, 4,(0,255,0),2,cv2.LINE_AA)
+
+			#crossing lower boundary
+			if pts[1][1] > 180:
+				font = cv2.FONT_HERSHEY_SIMPLEX
+				cv2.putText(frame,'go Forward',(10,500), font, 4,(0,0,255),2,cv2.LINE_AA)
+
+			
+	
+			if a==1:
+				img_name = "opencv_frame_complete.png"
+				cv2.imwrite(img_name, frame)
+
+			gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+			(x1, y1, w1, h1) = pts[2]
+			human_gray = gray[y1:y1+h1, x1:x1+w1]
+			human_color= frame[y1:y1+h1, x1:x1+w1]
+			faces = face_cascade.detectMultiScale(
+				human_gray,
+				scaleFactor=sF,
+				minNeighbors=8,
+				minSize=(20, 20),
+				flags=cv2.CASCADE_SCALE_IMAGE
+				)
+			
+			for (x, y, w, h) in faces:
+				cv2.rectangle(human_color, (x,y), (x+w, y+h), (255, 0, 0), 2)
+				roi_gray = human_gray[y:y+h, x:x+w]
+				roi_color = human_color[y:y+h, x:x+w]
 				
-				for (x, y, w, h) in faces:
-					cv2.rectangle(frame, (x,y), (x+w, y+h), (255, 0, 0), 2)
-					roi_gray = human_gray[y:y+h, x:x+w]
-					roi_color = human_color[y:y+h, x:x+w]
-					
-					smile=smile_cascade.detectMultiScale(
-					roi_gray,
-					scaleFactor=1.7,
-					minNeighbors=22,
-					minSize=(25, 25),
-					flags=cv2.CASCADE_SCALE_IMAGE
-					)
-					
-					for (x, y, w, h) in smile:
-						print ("Found"), len(smile), ("smiles")
-						cv2.rectangle(roi_color, (x, y), (x+w, y+h), (0, 0, 255), 1)
-						a=1
+				smile=smile_cascade.detectMultiScale(
+				roi_gray,
+				scaleFactor=1.7,
+				minNeighbors=9,
+				minSize=(0, 0),
+				flags=cv2.CASCADE_SCALE_IMAGE
+				)
+				
+				for (x, y, w, h) in smile:
+					print ("Found"), len(smile), ("smiles")
+					cv2.rectangle(roi_color, (x, y), (x+w, y+h), (0, 0, 255), 1)
+					a=1
 
 		cv2.imshow("Frame", frame)
 		key = cv2.waitKey(1) & 0xFF
